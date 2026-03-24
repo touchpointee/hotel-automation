@@ -1,0 +1,112 @@
+﻿
+> hotel-mvp@1.0.0 build
+> next build
+
+  Γû▓ Next.js 14.2.5
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/18) ...
+   Generating static pages (4/18) 
+   Generating static pages (8/18) 
+node.exe :  Γ¿» 
+useSearchParams() 
+should be wrapped in a 
+suspense boundary at 
+page "/login". Read 
+more: https://nextjs.or
+g/docs/messages/missing
+-suspense-with-csr-bail
+out
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ( Γ¿» useSearc   
+ hP...ith-csr-bailo    
+ut:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+    at o (C:\Users\ajma
+l\Downloads\hotel-mvp\h
+otel-mvp\.next\server\c
+hunks\57.js:1:10697)
+    at s (C:\Users\ajma
+l\Downloads\hotel-mvp\h
+otel-mvp\.next\server\c
+hunks\57.js:1:21647)
+    at a (C:\Users\ajma
+l\Downloads\hotel-mvp\h
+otel-mvp\.next\server\a
+pp\login\page.js:1:2381
+)
+    at nj (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:46251)
+    at nM (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:47571)
+    at nN (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:64546)
+    at nI (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:47010)
+    at nM (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:47717)
+    at nM (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:61546)
+    at nN (C:\Users\ajm
+al\Downloads\hotel-mvp\
+hotel-mvp\node_modules\
+next\dist\compiled\next
+-server\app-page.runtim
+e.prod.js:12:64546)
+
+Error occurred 
+prerendering page 
+"/login". Read more: ht
+tps://nextjs.org/docs/m
+essages/prerender-error
+
+   Generating static pages (13/18) 
+ Γ£ô Generating static pages (18/18)
+
+> Export encountered 
+errors on following 
+paths:
+	/login/page: /login

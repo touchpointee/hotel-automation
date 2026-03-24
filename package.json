@@ -1,0 +1,21 @@
+{
+  "name": "hotel-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "ical.js": "^2.2.1",
+    "jose": "^6.2.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.3.0",
+    "next": "14.2.5",
+    "node-cron": "^4.2.1",
+    "react": "^18",
+    "react-dom": "^18"
+  }
+}
