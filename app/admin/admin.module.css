@@ -52,6 +52,20 @@
   gap: 10px;
 }
 
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brandLogo {
+  flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #0a0a0a;
+}
+
 .nav {
   display: flex;
   flex-direction: column;

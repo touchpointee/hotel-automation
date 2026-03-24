@@ -96,7 +96,10 @@ export default function MobileUploadPage() {
   return (
     <div style={s.root}>
       <div style={s.header}>
-        <div style={s.logo}>🏨 DJ IMPERIALS</div>
+        <div style={s.logo}>
+          <img src="/logo.png" alt="" width={36} height={36} style={{ borderRadius: 8, objectFit: 'contain', display: 'block' }} />
+          <span style={s.logoText}>DJ IMPERIALS</span>
+        </div>
       </div>
       
       <div style={s.content}>
@@ -184,7 +187,8 @@ export default function MobileUploadPage() {
 const s = {
   root: { minHeight: '100vh', background: '#f8f9fa', display: 'flex', flexDirection: 'column' },
   header: { padding: '16px', background: '#0a2e1a', display: 'flex', justifyContent: 'center' },
-  logo: { fontSize: 20, fontWeight: 700, color: '#c9a84c', letterSpacing: 1 },
+  logo: { display: 'flex', alignItems: 'center', gap: 10 },
+  logoText: { fontSize: 18, fontWeight: 700, color: '#c9a84c', letterSpacing: 1 },
   content: { flex: 1, padding: '24px 16px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' },
   card: { background: '#fff', borderRadius: 16, padding: '32px 24px', width: '100%', maxWidth: 400, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' },
   heading: { fontSize: 24, fontWeight: 700, color: '#1a1a2e', margin: 0 },

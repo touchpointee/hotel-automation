@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import styles from './admin.module.css';
 
@@ -15,8 +16,17 @@ export default function AdminSidebar({ activePath }) {
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
         <h1 className={styles.title}>
-          <span style={{ fontSize: '24px' }}>🏨</span>
-          DJ IMPERIALS Admin
+          <span className={styles.brandRow}>
+            <Image
+              src="/logo.png"
+              alt="DJ IMPERIALS"
+              width={40}
+              height={40}
+              className={styles.brandLogo}
+              priority
+            />
+            <span>DJ IMPERIALS Admin</span>
+          </span>
         </h1>
       </div>
       <nav className={styles.nav}>

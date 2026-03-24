@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function LoginForm() {
@@ -54,7 +55,16 @@ function LoginForm() {
         boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '40px', marginBottom: '12px' }}>🏨</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+            <Image
+              src="/logo.png"
+              alt="DJ IMPERIALS"
+              width={72}
+              height={72}
+              priority
+              style={{ borderRadius: 14, objectFit: 'contain', background: '#0a0a0a' }}
+            />
+          </div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: 0 }}>DJ IMPERIALS</h1>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px' }}>Admin Portal</p>
         </div>

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "cross-env NODE_ENV=production next build",
-    "start": "next start"
+    "start": "next start",
+    "seed:admin": "node scripts/seed-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

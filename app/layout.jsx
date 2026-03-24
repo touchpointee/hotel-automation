@@ -7,7 +7,13 @@ const poppins = Poppins({
   display: 'swap',
 });
 
-export const metadata = { title: 'DJ IMPERIALS System' };
+export const metadata = {
+  title: 'DJ IMPERIALS System',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
+};
 export default function RootLayout({ children }) {
   return <html lang="en" className={poppins.className}><body>{children}</body></html>;
 }

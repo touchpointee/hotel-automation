@@ -97,7 +97,10 @@ export default function KioskPage() {
   return (
     <div style={s.root}>
       <div style={s.header}>
-        <div style={s.logo}>🏨 DJ IMPERIALS</div>
+        <div style={s.logo}>
+          <img src="/logo.png" alt="" width={40} height={40} style={{ borderRadius: 8, objectFit: 'contain', display: 'block' }} />
+          <span style={s.logoText}>DJ IMPERIALS</span>
+        </div>
         <div style={s.headerSub}>Self Check-In</div>
       </div>
 
@@ -272,7 +275,8 @@ function Row({ label, value, big }) {
 const s = {
   root: { minHeight: '100vh', background: 'linear-gradient(160deg, #0a2e1a, #0d3d24)', display: 'flex', flexDirection: 'column' },
   header: { padding: '20px 28px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 16 },
-  logo: { fontSize: 22, fontWeight: 700, color: '#c9a84c', letterSpacing: 2 },
+  logo: { display: 'flex', alignItems: 'center', gap: 12 },
+  logoText: { fontSize: 20, fontWeight: 700, color: '#c9a84c', letterSpacing: 2 },
   headerSub: { fontSize: 16, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' },
   content: { flex: 1, padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   card: { position: 'relative', background: '#fff', borderRadius: 24, padding: '24px 32px', width: '100%', maxWidth: 440, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 },
