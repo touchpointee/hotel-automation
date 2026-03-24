@@ -1,0 +1,131 @@
+/* Aligned with admin portal tokens (app/admin/admin.module.css) */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top right, #edf2ff, #f4f6fb 50%);
+  padding: 24px 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(19, 35, 66, 0.12);
+  border: 1px solid #e7ecf4;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.logo {
+  border-radius: 14px;
+  object-fit: contain;
+  background: #0a0a0a;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #142033;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  color: #6f7e94;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.errorBox {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #9f2e3e;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.fieldLast {
+  margin-bottom: 24px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 15px;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.submit {
+  width: 100%;
+  padding: 12px;
+  border-radius: 99px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(120deg, #245bca, #1f4fae);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(30, 79, 173, 0.26);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.submit:hover:not(:disabled) {
+  background: linear-gradient(120deg, #1f4fae, #194498);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(31, 79, 174, 0.32);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit:focus-visible {
+  outline: 2px solid #245bca;
+  outline-offset: 3px;
+}
+
+.fallback {
+  min-height: 100vh;
+  background: #f4f6fb;
+}

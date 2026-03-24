@@ -6,7 +6,7 @@ import AdminSidebar from '../AdminSidebar';
 export default function RoomsPage() {
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
-  
+
   const [isFloorModalOpen, setIsFloorModalOpen] = useState(false);
   const [editFloorId, setEditFloorId] = useState(null);
   const initialFloorForm = { name: '', directions: '' };
@@ -20,16 +20,15 @@ export default function RoomsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // OTA Calendar Sync
   const [syncRoom, setSyncRoom] = useState(null);
   const [icalSources, setIcalSources] = useState([]);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
 
-  useEffect(() => { 
-    fetchFloors(); 
-    fetchRooms(); 
+  useEffect(() => {
+    fetchFloors();
+    fetchRooms();
   }, []);
 
   async function fetchFloors() {
@@ -48,7 +47,6 @@ export default function RoomsPage() {
     } catch (e) { console.error('Failed to fetch rooms:', e); }
   }
 
-  // --- Floor Handlers ---
   function openFloorModal(floor = null) {
     if (floor) {
       setFloorForm({ name: floor.name, directions: floor.directions });
@@ -90,7 +88,6 @@ export default function RoomsPage() {
     finally { setLoading(false); }
   }
 
-  // --- Room Handlers ---
   function openRoomModal(room = null, autoFloorId = '') {
     if (room) {
       setRoomForm({ room_no: room.room_no, floor_id: room.floor_id?._id || '', directions: room.directions || '' });
@@ -130,7 +127,6 @@ export default function RoomsPage() {
     finally { setLoading(false); }
   }
 
-  // OTA Sync helpers
   function openSyncModal(room) {
     setSyncRoom(room);
     setIcalSources((room.ical_sources || []).map(s => ({ platform: s.platform, url: s.url, syncStatus: s.syncStatus })));
@@ -149,9 +145,9 @@ export default function RoomsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setSyncMsg('✅ Calendar sources saved! Click "Sync from OTAs" on the dashboard to sync now.');
+      setSyncMsg('Calendar sources saved. Use “Sync from OTAs” on the dashboard to run a sync now.');
       fetchRooms();
-    } catch (err) { setSyncMsg(`⚠️ ${err.message}`); }
+    } catch (err) { setSyncMsg(`Error: ${err.message}`); }
     finally { setSyncLoading(false); }
   }
 
@@ -160,85 +156,95 @@ export default function RoomsPage() {
   return (
     <div className={styles.layout}>
       <AdminSidebar activePath="/admin/rooms" />
-
       <div className={styles.mainContainer}>
         <header className={styles.topbar}>
-          <h2 className={styles.topbarTitle}>Hierarchical Floor Management</h2>
+          <div className={styles.topbarStack}>
+            <h2 className={styles.topbarTitle}>Rooms and floors</h2>
+            <p className={styles.pageIntro}>Define floors and rooms, then attach OTA calendar feeds per room.</p>
+          </div>
         </header>
 
         <main className={styles.content}>
           <div className={styles.toolbar}>
             <div>
-              <h2 className={styles.subtitle}>Building Map</h2>
+              <h2 className={styles.subtitle}>Building map</h2>
               <p className={styles.desc}>
                 Organize DJ IMPERIALS into floors, then add rooms to them.
-                This structure will guide guests during check-in.
+                This structure guides guests during check-in.
               </p>
             </div>
-            <button onClick={() => openFloorModal()} className={styles.primaryBtn}>
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <button type="button" onClick={() => openFloorModal()} className={styles.primaryBtn}>
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              Add New Floor
+              Add floor
             </button>
           </div>
 
           <div>
             {floors.length === 0 && (
-              <div className={styles.card} style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-                No floors have been created yet. Click "Add New Floor" to get started!
+              <div className={`${styles.card} ${styles.emptyStateCard}`}>
+                No floors yet. Add a floor to get started.
               </div>
             )}
 
             {floors.map(floor => {
               const floorRooms = rooms.filter(r => r.floor_id?._id === floor._id);
               return (
-                <div key={floor._id} className={styles.card} style={{ marginBottom: 32, overflow: 'visible' }}>
-                  {/* Floor Header block */}
-                  <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
+                <div key={floor._id} className={`${styles.card} ${styles.floorCard}`}>
+                  <div className={styles.floorCardHeader}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 18, color: '#0f172a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        🏢 {floor.name}
-                        <span style={{ fontSize: 12, backgroundColor: '#e2e8f0', color: '#475569', padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>{floorRooms.length} Rooms</span>
+                      <h3 className={styles.floorTitleRow}>
+                        <svg width={20} height={20} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className={styles.navIcon} aria-hidden>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {floor.name}
+                        <span className={styles.floorRoomBadge}>{floorRooms.length} rooms</span>
                       </h3>
-                      <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>{floor.directions}</div>
+                      <div className={styles.floorDirections}>{floor.directions}</div>
                     </div>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <button onClick={() => openRoomModal(null, floor._id)} className={styles.primaryBtn} style={{ padding: '6px 14px', fontSize: 13, backgroundColor: '#10b981' }}>+ Add Room Here</button>
-                      <button onClick={() => openFloorModal(floor)} className={styles.actionBtn}>Edit Floor</button>
-                      <button onClick={() => handleDeleteFloor(floor._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Del</button>
+                    <div className={styles.floorHeaderActions}>
+                      <button type="button" onClick={() => openRoomModal(null, floor._id)} className={styles.successAccentBtn}>
+                        Add room here
+                      </button>
+                      <button type="button" onClick={() => openFloorModal(floor)} className={styles.actionBtn}>Edit floor</button>
+                      <button type="button" onClick={() => handleDeleteFloor(floor._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
                     </div>
                   </div>
 
-                  {/* Rooms List for this Floor */}
-                  <div style={{ padding: floorRooms.length > 0 ? '0' : '24px' }}>
+                  <div className={floorRooms.length > 0 ? styles.roomsTableSection : styles.roomsTableSectionEmpty}>
                     {floorRooms.length === 0 ? (
-                      <div style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>No rooms assigned to this floor yet.</div>
+                      <div className={styles.roomsEmptyHint}>No rooms on this floor yet.</div>
                     ) : (
-                      <table className={styles.table} style={{ margin: 0 }}>
-                        <thead style={{ backgroundColor: '#ffffff' }}>
+                      <table className={`${styles.table} ${styles.tableNoMargin}`}>
+                        <thead className={styles.theadPlain}>
                           <tr>
-                            <th className={styles.th}>Room / Door No.</th>
-                            <th className={styles.th}>Additional Directions</th>
-                            <th className={styles.th}>OTA Sync</th>
-                            <th className={styles.th} style={{ textAlign: 'right' }}>Actions</th>
+                            <th className={styles.th}>Room / door no.</th>
+                            <th className={styles.th}>Directions</th>
+                            <th className={styles.th}>OTA sync</th>
+                            <th className={`${styles.th} ${styles.thRight}`}>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {floorRooms.map(r => (
                             <tr key={r._id} className={styles.tr}>
-                              <td className={styles.td} style={{ width: '20%' }}><span className={styles.roomTag}>{r.room_no}</span></td>
-                              <td className={styles.td}><span style={{ color: '#475569', fontSize: 13 }}>{r.directions || '-'}</span></td>
+                              <td className={`${styles.td} ${styles.w20}`}><span className={styles.roomTag}>{r.room_no}</span></td>
+                              <td className={styles.td}><span className={styles.cellMuted}>{r.directions || '—'}</span></td>
                               <td className={styles.td}>
-                                <span style={{ fontSize: 11, color: (r.ical_sources||[]).length > 0 ? '#16a34a' : '#94a3b8' }}>
-                                  {(r.ical_sources||[]).length} OTA{(r.ical_sources||[]).length !== 1 ? 's' : ''}
+                                <span className={`${styles.otaCount} ${(r.ical_sources || []).length > 0 ? styles.otaCountOn : styles.otaCountOff}`}>
+                                  {(r.ical_sources || []).length} feed{(r.ical_sources || []).length !== 1 ? 's' : ''}
                                 </span>
                               </td>
-                              <td className={styles.td} style={{ textAlign: 'right', width: '25%' }}>
-                                <div className={styles.actions} style={{ justifyContent: 'flex-end' }}>
-                                  <button onClick={() => openRoomModal(r)} className={styles.actionBtn} style={{ padding: '4px 10px', fontSize: 12 }}>Edit</button>
-                                  <button onClick={() => openSyncModal(r)} className={styles.actionBtn} style={{ padding: '4px 10px', fontSize: 12 }}>📅 Sync</button>
-                                  <button onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`} style={{ padding: '4px 10px', fontSize: 12 }}>Del</button>
+                              <td className={`${styles.td} ${styles.tdRight} ${styles.w25}`}>
+                                <div className={`${styles.actions} ${styles.actionsEnd}`}>
+                                  <button type="button" onClick={() => openRoomModal(r)} className={styles.actionBtnSm}>Edit</button>
+                                  <button type="button" onClick={() => openSyncModal(r)} className={styles.actionBtnSm}>
+                                    <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden style={{ marginRight: 4, verticalAlign: 'middle' }}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Sync
+                                  </button>
+                                  <button type="button" onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtnSm} ${styles.actionBtnDanger}`}>Delete</button>
                                 </div>
                               </td>
                             </tr>
@@ -251,22 +257,21 @@ export default function RoomsPage() {
               );
             })}
 
-            {/* Orphaned Rooms */}
             {unassignedRooms.length > 0 && (
-              <div className={styles.card} style={{ marginBottom: 32, border: '1px solid #fecaca' }}>
-                <div style={{ padding: '16px 24px', backgroundColor: '#fef2f2', borderBottom: '1px solid #fecaca' }}>
-                  <h3 style={{ margin: 0, fontSize: 16, color: '#b91c1c' }}>⚠️ Unassigned Rooms</h3>
+              <div className={`${styles.card} ${styles.warningCard} ${styles.floorCard}`}>
+                <div className={styles.warningCardHeader}>
+                  <h3 className={styles.warningCardTitle}>Unassigned rooms</h3>
                 </div>
                 <table className={styles.table}>
                   <tbody>
                     {unassignedRooms.map(r => (
                       <tr key={r._id} className={styles.tr}>
                         <td className={styles.td}><span className={styles.roomTag}>{r.room_no}</span></td>
-                        <td className={styles.td}><span style={{ color: '#475569', fontSize: 13 }}>Missing Floor Data</span></td>
-                        <td className={styles.td} style={{ textAlign: 'right' }}>
-                          <div className={styles.actions} style={{ justifyContent: 'flex-end' }}>
-                            <button onClick={() => openRoomModal(r)} className={styles.actionBtn}>Reassign Floor</button>
-                            <button onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Del</button>
+                        <td className={styles.td}><span className={styles.cellMuted}>Missing floor</span></td>
+                        <td className={`${styles.td} ${styles.tdRight}`}>
+                          <div className={`${styles.actions} ${styles.actionsEnd}`}>
+                            <button type="button" onClick={() => openRoomModal(r)} className={styles.actionBtn}>Reassign floor</button>
+                            <button type="button" onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -279,128 +284,138 @@ export default function RoomsPage() {
         </main>
       </div>
 
-      {/* FLOOR MODAL */}
       {isFloorModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsFloorModalOpen(false)}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>{editFloorId ? 'Edit Floor Details' : 'Create New Floor'}</h2>
-              <button className={styles.closeBtn} onClick={() => setIsFloorModalOpen(false)}>&times;</button>
+              <h2 className={styles.modalTitle}>{editFloorId ? 'Edit floor' : 'New floor'}</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setIsFloorModalOpen(false)} aria-label="Close">&times;</button>
             </div>
             <div className={styles.modalBody}>
-              {error && <div className={styles.errorBox}>⚠️ {error}</div>}
+              {error && <div className={styles.errorBox}>{error}</div>}
               <form id="floor-form" onSubmit={handleFloorSubmit} className={styles.formGrid}>
                 <div className={`${styles.formField} ${styles.fullWidth}`}>
-                  <label className={styles.label}>Floor Name (e.g. Basement, Level 2)</label>
+                  <label className={styles.label}>Floor name</label>
                   <input className={styles.input} value={floorForm.name} onChange={e => setFloorForm(f => ({ ...f, name: e.target.value }))} required />
                 </div>
                 <div className={`${styles.formField} ${styles.fullWidth}`}>
-                  <label className={styles.label}>Base Floor Directions (e.g. Take the west elevator to floor 2)</label>
-                  <textarea className={styles.input} value={floorForm.directions} onChange={e => setFloorForm(f => ({ ...f, directions: e.target.value }))} required style={{ height: 100, resize: 'vertical' }} />
+                  <label className={styles.label}>Directions for this floor</label>
+                  <textarea className={`${styles.input} ${styles.textarea}`} value={floorForm.directions} onChange={e => setFloorForm(f => ({ ...f, directions: e.target.value }))} required />
                 </div>
               </form>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setIsFloorModalOpen(false)}>Cancel</button>
-              <button form="floor-form" type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Saving...' : 'Save Floor'}</button>
+              <button type="button" className={styles.cancelBtn} onClick={() => setIsFloorModalOpen(false)}>Cancel</button>
+              <button form="floor-form" type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Saving…' : 'Save floor'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ROOM MODAL */}
       {isRoomModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsRoomModalOpen(false)}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>{editRoomId ? 'Edit Room' : 'Add Room to Floor'}</h2>
-              <button className={styles.closeBtn} onClick={() => setIsRoomModalOpen(false)}>&times;</button>
+              <h2 className={styles.modalTitle}>{editRoomId ? 'Edit room' : 'Add room'}</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setIsRoomModalOpen(false)} aria-label="Close">&times;</button>
             </div>
             <div className={styles.modalBody}>
-              {error && <div className={styles.errorBox}>⚠️ {error}</div>}
+              {error && <div className={styles.errorBox}>{error}</div>}
               <form id="room-form" onSubmit={handleRoomSubmit} className={styles.formGrid}>
                 <div className={styles.formField}>
-                  <label className={styles.label}>Room / Door Number (Unique)</label>
+                  <label className={styles.label}>Room / door number</label>
                   <input className={styles.input} value={roomForm.room_no} onChange={e => setRoomForm(f => ({ ...f, room_no: e.target.value }))} placeholder="e.g. 201" required />
                 </div>
                 <div className={styles.formField}>
-                  <label className={styles.label}>Assigned Floor</label>
+                  <label className={styles.label}>Floor</label>
                   <select className={styles.select} value={roomForm.floor_id} onChange={e => setRoomForm(f => ({ ...f, floor_id: e.target.value }))} required>
-                    <option value="" disabled>Select Floor</option>
+                    <option value="" disabled>Select floor</option>
                     {floors.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
                   </select>
                 </div>
                 <div className={`${styles.formField} ${styles.fullWidth}`}>
-                  <label className={styles.label}>Specific Door Directions (Optional)</label>
-                  <textarea className={styles.input} value={roomForm.directions} onChange={e => setRoomForm(f => ({ ...f, directions: e.target.value }))} placeholder="e.g. First door on the left." style={{ height: 80, resize: 'vertical' }} />
+                  <label className={styles.label}>Door directions (optional)</label>
+                  <textarea className={`${styles.input} ${styles.textarea} ${styles.textareaSm}`} value={roomForm.directions} onChange={e => setRoomForm(f => ({ ...f, directions: e.target.value }))} placeholder="e.g. First door on the left." />
                 </div>
               </form>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setIsRoomModalOpen(false)}>Cancel</button>
-              <button form="room-form" type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Saving...' : 'Save Room'}</button>
+              <button type="button" className={styles.cancelBtn} onClick={() => setIsRoomModalOpen(false)}>Cancel</button>
+              <button form="room-form" type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Saving…' : 'Save room'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* OTA CALENDAR SYNC MODAL */}
       {syncRoom && (
         <div className={styles.modalOverlay} onClick={() => { setSyncRoom(null); setSyncMsg(''); }}>
-          <div className={styles.modalContent} style={{ maxWidth: 640, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          <div className={`${styles.modalContent} ${styles.syncModalWide}`} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>📅 OTA Calendar Sync – {syncRoom.room_no}</h2>
-              <button className={styles.closeBtn} onClick={() => { setSyncRoom(null); setSyncMsg(''); }}>&times;</button>
+              <h2 className={styles.modalTitle}>Calendar sync — room {syncRoom.room_no}</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => { setSyncRoom(null); setSyncMsg(''); }} aria-label="Close">&times;</button>
             </div>
             <div className={styles.modalBody}>
-              {/* Export URL */}
-              <div style={{ marginBottom: 20 }}>
-                <label className={styles.label}>Your hotel calendar URL (share with OTAs so they can import your bookings)</label>
-                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                  <input readOnly value={typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/room/${syncRoom._id}` : ''}
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, fontFamily: 'monospace', background: '#f8fafc' }} />
+              <div className={styles.syncBlock}>
+                <label className={styles.label}>Export URL (share with OTAs)</label>
+                <div className={styles.copyRow}>
+                  <input
+                    readOnly
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/room/${syncRoom._id}` : ''}
+                    className={styles.monoReadonly}
+                  />
                   <button
-                    onClick={async () => { await navigator.clipboard.writeText(`${window.location.origin}/api/calendar/room/${syncRoom._id}`); setCopiedUrl(true); setTimeout(() => setCopiedUrl(false), 2000); }}
-                    style={{ padding: '8px 14px', borderRadius: 8, border: '1.5px solid #e2e8f0', background: copiedUrl ? '#d1fae5' : '#fff', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}
-                  >{copiedUrl ? '✅ Copied!' : '📋 Copy'}</button>
+                    type="button"
+                    className={`${styles.copyBtn} ${copiedUrl ? styles.copyBtnDone : ''}`}
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(`${window.location.origin}/api/calendar/room/${syncRoom._id}`);
+                      setCopiedUrl(true);
+                      setTimeout(() => setCopiedUrl(false), 2000);
+                    }}
+                  >
+                    {copiedUrl ? 'Copied' : 'Copy'}
+                  </button>
                 </div>
               </div>
 
-              {/* iCal Sources */}
-              <div style={{ marginBottom: 16 }}>
-                <label className={styles.label}>Import bookings FROM OTAs (paste their iCal export URL below)</label>
-                <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 10px' }}>On Airbnb/Booking.com go to Availability → Export calendar → Copy link. Paste it here.</p>
+              <div className={styles.syncBlock}>
+                <label className={styles.label}>Import from OTAs (iCal URL)</label>
+                <p className={styles.syncHint}>In Airbnb or Booking.com: Availability → Export calendar → copy the link and paste it below.</p>
                 {icalSources.map((src, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                    <select value={src.platform}
+                  <div key={i} className={styles.syncFieldRow}>
+                    <select
+                      value={src.platform}
                       onChange={e => setIcalSources(s => s.map((x, j) => j === i ? { ...x, platform: e.target.value } : x))}
-                      style={{ width: 130, padding: '7px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 13, flexShrink: 0 }}>
+                      className={styles.syncPlatformSelect}
+                    >
                       <option value="airbnb">Airbnb</option>
                       <option value="booking.com">Booking.com</option>
                       <option value="goibibo">Goibibo</option>
                       <option value="makemytrip">MakeMyTrip</option>
                       <option value="direct">Other</option>
                     </select>
-                    <input placeholder="Paste iCal URL..." value={src.url}
+                    <input
+                      placeholder="Paste iCal URL…"
+                      value={src.url}
                       onChange={e => setIcalSources(s => s.map((x, j) => j === i ? { ...x, url: e.target.value } : x))}
-                      style={{ flex: 1, padding: '7px 12px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, fontFamily: 'monospace' }} />
-                    {src.syncStatus && <span style={{ fontSize: 11, color: src.syncStatus === 'success' ? '#16a34a' : '#dc2626', whiteSpace: 'nowrap' }}>{src.syncStatus}</span>}
-                    <button onClick={() => setIcalSources(s => s.filter((_, j) => j !== i))}
-                      style={{ padding: '5px 10px', borderRadius: 8, border: '1.5px solid #fecaca', background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}>✕</button>
+                      className={styles.syncUrlInput}
+                    />
+                    {src.syncStatus && (
+                      <span className={`${styles.syncStatusTag} ${src.syncStatus === 'success' ? styles.syncStatusOk : styles.syncStatusErr}`}>{src.syncStatus}</span>
+                    )}
+                    <button type="button" className={styles.removeIcalBtn} onClick={() => setIcalSources(s => s.filter((_, j) => j !== i))} aria-label="Remove feed">×</button>
                   </div>
                 ))}
-                <button onClick={() => setIcalSources(s => [...s, { platform: 'airbnb', url: '' }])}
-                  style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px dashed #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: 13, color: '#64748b', marginTop: 4 }}>
-                  + Add OTA Calendar
+                <button type="button" className={styles.addIcalBtn} onClick={() => setIcalSources(s => [...s, { platform: 'airbnb', url: '' }])}>
+                  Add OTA feed
                 </button>
               </div>
 
-              {syncMsg && <div style={{ fontSize: 13, marginBottom: 8 }}>{syncMsg}</div>}
+              {syncMsg && <div className={styles.syncFeedback}>{syncMsg}</div>}
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => { setSyncRoom(null); setSyncMsg(''); }}>Cancel</button>
-              <button className={styles.submitBtn} disabled={syncLoading} onClick={saveIcalSources}>
-                {syncLoading ? 'Saving...' : 'Save Sources'}
+              <button type="button" className={styles.cancelBtn} onClick={() => { setSyncRoom(null); setSyncMsg(''); }}>Cancel</button>
+              <button type="button" className={styles.submitBtn} disabled={syncLoading} onClick={saveIcalSources}>
+                {syncLoading ? 'Saving…' : 'Save sources'}
               </button>
             </div>
           </div>
@@ -409,4 +424,3 @@ export default function RoomsPage() {
     </div>
   );
 }
-

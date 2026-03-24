@@ -3,6 +3,14 @@ import { useState, useEffect } from 'react';
 import styles from './admin.module.css';
 import AdminSidebar from './AdminSidebar';
 
+function formatStayDisplay(value) {
+  if (!value) return '';
+  const normalized = typeof value === 'string' ? value.trim().replace(' ', 'T') : value;
+  const d = new Date(normalized);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 export default function AdminPage() {
   const [bookings, setBookings] = useState([]);
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -80,10 +88,10 @@ export default function AdminPage() {
       if (!res.ok) throw new Error(data.error || 'Sync failed');
       const ok = (data.results || []).filter(r => r.status === 'ok').length;
       const fail = (data.results || []).filter(r => r.status === 'error').length;
-      setSyncResult(`✅ Synced ${ok} source${ok !== 1 ? 's' : ''}${fail > 0 ? `, ⚠️ ${fail} failed` : ''}`);
+      setSyncResult(`Synced ${ok} source${ok !== 1 ? 's' : ''}${fail > 0 ? `, ${fail} failed` : ''}`);
       fetchBookings();
     } catch (e) {
-      setSyncResult(`⚠️ ${e.message}`);
+      setSyncResult(`Error: ${e.message}`);
     } finally {
       setSyncLoading(false);
       setTimeout(() => setSyncResult(null), 6000);
@@ -232,51 +240,58 @@ export default function AdminPage() {
   return (
     <div className={styles.layout}>
       <AdminSidebar activePath="/admin" />
-
-      {/* Main Content Area */}
       <div className={styles.mainContainer}>
         <header className={styles.topbar}>
-          <h2 className={styles.topbarTitle}>Dashboard Overview</h2>
+          <div className={styles.topbarStack}>
+            <h2 className={styles.topbarTitle}>Dashboard Overview</h2>
+            <p className={styles.pageIntro}>Bookings, OTA sync, and kiosk OTPs for today and upcoming stays.</p>
+          </div>
         </header>
 
         <main className={styles.content}>
           <div className={styles.toolbar}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div className={styles.toolbarCluster}>
               <div className={styles.tabsMenu}>
-                <button className={`${styles.tabBtn} ${activeTab==='all' ? styles.tabActive : ''}`} onClick={() => setActiveTab('all')}>All Bookings</button>
-                <button className={`${styles.tabBtn} ${activeTab==='checked_in' ? styles.tabActive : ''}`} onClick={() => setActiveTab('checked_in')}>In-House</button>
-                <button className={`${styles.tabBtn} ${activeTab==='pending' ? styles.tabActive : ''}`} onClick={() => setActiveTab('pending')}>Waiting</button>
+                <button type="button" className={`${styles.tabBtn} ${activeTab==='all' ? styles.tabActive : ''}`} onClick={() => setActiveTab('all')}>All Bookings</button>
+                <button type="button" className={`${styles.tabBtn} ${activeTab==='checked_in' ? styles.tabActive : ''}`} onClick={() => setActiveTab('checked_in')}>In-House</button>
+                <button type="button" className={`${styles.tabBtn} ${activeTab==='pending' ? styles.tabActive : ''}`} onClick={() => setActiveTab('pending')}>Waiting</button>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 8px' }}>
-                <span style={{ fontSize: '13px', color: '#64748b', marginRight: '8px' }}>Date:</span>
-                <input 
-                  type="date" 
-                  value={filterDate} 
-                  onChange={e => setFilterDate(e.target.value)} 
-                  style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#0f172a', background: 'transparent' }}
-                  title="Filter by Date"
+              <div className={styles.dateFilter}>
+                <span className={styles.dateFilterLabel}>Date</span>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={e => setFilterDate(e.target.value)}
+                  className={styles.dateFilterInput}
+                  title="Filter by date"
                 />
                 {filterDate && (
-                  <button onClick={() => setFilterDate('')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px', padding: '0 4px', fontWeight: 'bold' }}>&times;</button>
+                  <button type="button" className={styles.ghostBtn} onClick={() => setFilterDate('')} aria-label="Clear date filter">
+                    &times;
+                  </button>
                 )}
               </div>
             </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+
+            <div className={styles.toolbarActions}>
               <div className={styles.stats}>
                 Showing <strong>{filteredBookings.length}</strong> {filteredBookings.length === 1 ? 'booking' : 'bookings'}
               </div>
-              {syncResult && <span style={{ fontSize: 13, color: '#64748b' }}>{syncResult}</span>}
+              {syncResult && <span className={styles.syncFeedback}>{syncResult}</span>}
               <button
+                type="button"
                 onClick={handleOTASync}
                 disabled={syncLoading}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1.5px solid #e2e8f0', background: '#fff', cursor: syncLoading ? 'default' : 'pointer', fontSize: 13, color: '#475569', opacity: syncLoading ? 0.7 : 1 }}
+                className={styles.secondaryBtn}
               >
-                {syncLoading ? '🔄 Syncing...' : '🔄 Sync from OTAs'}
+                <svg className={styles.iconSm} width={16} height={16} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {syncLoading ? 'Syncing…' : 'Sync from OTAs'}
               </button>
-              <button onClick={openCreateModal} className={styles.primaryBtn}>
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <button type="button" onClick={openCreateModal} className={styles.primaryBtn}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 New Booking
@@ -309,11 +324,11 @@ export default function AdminPage() {
                       <tr key={b._id} className={styles.tr}>
                         <td className={styles.td}>
                           <div className={styles.guestName}>{b.guest_name}</div>
-                          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>{b.guest_phone}</div>
-                          {b.guest_email && <div style={{ fontSize: '12px', color: '#94a3b8' }}>{b.guest_email}</div>}
+                          <div className={styles.cellMuted}>{b.guest_phone}</div>
+                          {b.guest_email && <div className={styles.cellMutedSm}>{b.guest_email}</div>}
                         </td>
                         <td className={styles.td}>
-                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 99, background: '#f1f5f9', color: '#475569', fontWeight: 600, textTransform: 'capitalize' }}>
+                          <span className={styles.sourcePill}>
                             {b.source || 'direct'}
                           </span>
                         </td>
@@ -321,10 +336,16 @@ export default function AdminPage() {
                           <span className={styles.roomTag}>{b.room_no}</span>
                         </td>
                         <td className={styles.td}>
-                          <div style={{ fontSize: '14px', color: '#0f172a' }}>{b.check_in}</div>
-                          <div style={{ fontSize: '13px', color: isOverdue ? '#dc2626' : '#64748b', marginTop: '4px', fontWeight: isOverdue ? 'bold' : 'normal' }}>
-                            to {b.check_out} {isOverdue && '(Overdue!)'}
-                          </div>
+                          <div className={styles.stayDatePrimary}>{formatStayDisplay(b.check_in)}</div>
+                          {isOverdue ? (
+                            <div className={styles.stayDateOverdue}>
+                              Out {formatStayDisplay(b.check_out)} (overdue)
+                            </div>
+                          ) : (
+                            <div className={styles.stayDateSecondary}>
+                              Out {formatStayDisplay(b.check_out)}
+                            </div>
+                          )}
                         </td>
                         <td className={styles.td}>
                           <span className={styles.otpCode}>{b.otp}</span>
@@ -333,7 +354,7 @@ export default function AdminPage() {
                           {b.id_proof_status === 'uploaded' && b.id_proof ? (
                             <button onClick={() => openEditModal(b)} className={styles.actionBtn}>View Details</button>
                           ) : (
-                            <span style={{ color: '#888', fontSize: '13px' }}>Pending</span>
+                            <span className={styles.idPending}>Pending</span>
                           )}
                         </td>
                         <td className={styles.td}>
@@ -346,14 +367,18 @@ export default function AdminPage() {
                             {/* OTA bookings without OTP get Assign & Confirm button */}
                             {!b.otp && b.source !== 'direct' && b.source !== 'offline' && (
                               <button
+                                type="button"
                                 onClick={() => { setConfirmModal(b); setConfirmRoomFloor(''); setConfirmRoom(''); }}
-                                style={{ padding: '4px 10px', borderRadius: 6, border: '1.5px solid #f59e0b', background: '#fffbeb', color: '#92400e', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                className={styles.assignRoomBtn}
                               >
-                                🏠 Assign Room
+                                <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                Assign room
                               </button>
                             )}
-                            <button onClick={() => openEditModal(b)} className={styles.actionBtn}>Edit</button>
-                            <button onClick={() => handleDelete(b._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Del</button>
+                            <button type="button" onClick={() => openEditModal(b)} className={styles.actionBtn}>Edit</button>
+                            <button type="button" onClick={() => handleDelete(b._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -372,19 +397,19 @@ export default function AdminPage() {
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>{editId ? 'Edit Booking' : 'Create New Booking'}</h2>
-              <button className={styles.closeBtn} onClick={() => setIsModalOpen(false)}>&times;</button>
+              <button type="button" className={styles.closeBtn} onClick={() => setIsModalOpen(false)} aria-label="Close">&times;</button>
             </div>
             
             <div className={styles.modalBody}>
               {success && (
                 <div className={styles.successBox}>
-                  <div style={{ fontWeight: 600 }}>✅ Booking Created Successfully!</div>
-                  <div style={{ fontSize: '14px', color: '#047857', marginTop: '8px' }}>Share this OTP with the guest for kiosk check-in:</div>
+                  <div className={styles.successTitle}>Booking created</div>
+                  <div className={styles.successSub}>Share this OTP with the guest for kiosk check-in:</div>
                   <div className={styles.successOtp}>{success.otp}</div>
                 </div>
               )}
 
-              {error && <div className={styles.errorBox}>⚠️ {error}</div>}
+              {error && <div className={styles.errorBox}>{error}</div>}
 
               <form id="booking-form" onSubmit={handleSubmit} className={styles.formGrid}>
                 <div className={styles.formField}>
@@ -508,19 +533,19 @@ export default function AdminPage() {
                 )}
 
                 {editId && form.id_proof_status === 'uploaded' && form.id_proof && (
-                  <div className={`${styles.formField} ${styles.fullWidth}`} style={{ marginTop: 16, padding: 16, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                    <label className={styles.label} style={{ marginBottom: 12 }}>Guest ID Document</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' }}>
-                      <img 
-                        src={`/api/documents/${form.id_proof}`} 
-                        alt="ID Proof" 
-                        style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 8, border: '1px solid #cbd5e1', objectFit: 'contain', background: '#fff' }} 
+                  <div className={`${styles.formField} ${styles.fullWidth} ${styles.idProofPanel}`}>
+                    <label className={`${styles.label} ${styles.idProofLabel}`}>Guest ID document</label>
+                    <div className={styles.idProofStack}>
+                      <img
+                        src={`/api/documents/${form.id_proof}`}
+                        alt="Guest ID proof"
+                        className={styles.idProofImage}
                       />
-                      <a href={`/api/documents/${form.id_proof}?download=true`} download className={styles.primaryBtn} style={{ textDecoration: 'none' }}>
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <a href={`/api/documents/${form.id_proof}?download=true`} download className={`${styles.primaryBtn} ${styles.downloadLinkBtn}`}>
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        Download Document
+                        Download document
                       </a>
                     </div>
                   </div>
@@ -529,7 +554,7 @@ export default function AdminPage() {
             </div>
 
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setIsModalOpen(false)}>Cancel</button>
+              <button type="button" className={styles.cancelBtn} onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button form="booking-form" type="submit" className={styles.submitBtn} disabled={loading}>
                 {loading ? 'Saving...' : editId ? 'Update Booking' : 'Create Booking'}
               </button>
@@ -541,35 +566,35 @@ export default function AdminPage() {
       {/* OTA ASSIGN ROOM & CONFIRM MODAL */}
       {confirmModal && (
         <div className={styles.modalOverlay} onClick={() => setConfirmModal(null)}>
-          <div className={styles.modalContent} style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+          <div className={`${styles.modalContent} ${styles.modalNarrow}`} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>🏠 Assign Room & Confirm Booking</h2>
-              <button className={styles.closeBtn} onClick={() => setConfirmModal(null)}>&times;</button>
+              <h2 className={styles.modalTitle}>Assign room and confirm</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setConfirmModal(null)} aria-label="Close">&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 16px', marginBottom: 20, fontSize: 14 }}>
-                <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{confirmModal.guest_name}</div>
-                <div style={{ color: '#64748b', fontSize: 13 }}>{confirmModal.check_in} → {confirmModal.check_out}</div>
-                <div style={{ marginTop: 6 }}>
-                  <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 99, background: '#f1f5f9', color: '#475569', fontWeight: 600, textTransform: 'capitalize' }}>
-                    {confirmModal.source}
-                  </span>
+              <div className={styles.confirmSummary}>
+                <div className={styles.confirmSummaryName}>{confirmModal.guest_name}</div>
+                <div className={styles.confirmSummaryDates}>
+                  {formatStayDisplay(confirmModal.check_in)} — {formatStayDisplay(confirmModal.check_out)}
+                </div>
+                <div className={styles.confirmSummaryRow}>
+                  <span className={styles.sourcePill}>{confirmModal.source}</span>
                 </div>
               </div>
-              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-                Select the room to assign. An OTP will be auto-generated for kiosk check-in.
+              <p className={styles.confirmHint}>
+                Select the room to assign. An OTP will be generated for kiosk check-in.
               </p>
-              <div style={{ marginBottom: 12 }}>
-                <label className={styles.label}>Filter by Floor</label>
+              <div className={styles.formField}>
+                <label className={styles.label}>Filter by floor</label>
                 <select className={styles.select} value={confirmRoomFloor} onChange={e => { setConfirmRoomFloor(e.target.value); setConfirmRoom(''); }}>
-                  <option value="">All Floors</option>
+                  <option value="">All floors</option>
                   {availableFloors.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
                 </select>
               </div>
-              <div>
-                <label className={styles.label}>Select Room *</label>
+              <div className={styles.formField}>
+                <label className={styles.label}>Room</label>
                 <select className={styles.select} value={confirmRoom} onChange={e => setConfirmRoom(e.target.value)} required>
-                  <option value="">Choose a room...</option>
+                  <option value="">Choose a room…</option>
                   {availableRooms
                     .filter(r => !confirmRoomFloor || r.floor_id?._id === confirmRoomFloor)
                     .map(r => {
@@ -588,34 +613,37 @@ export default function AdminPage() {
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setConfirmModal(null)}>Cancel</button>
+              <button type="button" className={styles.cancelBtn} onClick={() => setConfirmModal(null)}>Cancel</button>
               <button
+                type="button"
                 className={styles.submitBtn}
                 disabled={!confirmRoom || confirmLoading}
                 onClick={handleConfirmOTA}
               >
-                {confirmLoading ? 'Confirming...' : '✅ Confirm & Generate OTP'}
+                {confirmLoading ? 'Confirming…' : 'Confirm and generate OTP'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* OTP SUCCESS BANNER — shown after confirming OTA booking */}
       {confirmedOtp && (
-        <div style={{
-          position: 'fixed', top: 24, left: '50%', transform: 'translateX(-50%)',
-          background: '#0f172a', color: '#fff', borderRadius: 16, padding: '20px 32px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)', zIndex: 2000, textAlign: 'center', minWidth: 320,
-        }}>
-          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>✅ Booking Confirmed! Share this OTP with guest:</div>
-          <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '0.15em', color: '#a5f3fc', fontFamily: 'monospace', margin: '8px 0' }}>{confirmedOtp}</div>
-          <button
-            onClick={() => setConfirmedOtp(null)}
-            style={{ marginTop: 12, padding: '6px 20px', borderRadius: 8, background: '#1e293b', color: '#94a3b8', border: 'none', cursor: 'pointer', fontSize: 13 }}
-          >
-            Close
-          </button>
+        <div className={`${styles.modalOverlay} ${styles.modalOverlayElevated}`} onClick={() => setConfirmedOtp(null)}>
+          <div className={`${styles.modalContent} ${styles.otpSuccessModal}`} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Booking confirmed</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setConfirmedOtp(null)} aria-label="Close">&times;</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.successBox}>
+                <p className={styles.successSub}>Share this OTP with the guest for kiosk check-in:</p>
+                <div className={styles.successOtp}>{confirmedOtp}</div>
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button type="button" className={styles.submitBtn} onClick={() => setConfirmedOtp(null)}>Dismiss</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

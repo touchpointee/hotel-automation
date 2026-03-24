@@ -26,13 +26,18 @@ export default function ChannelsPage() {
       <AdminSidebar activePath="/admin/channels" />
       <div className={styles.mainContainer}>
         <header className={styles.topbar}>
-          <h2 className={styles.topbarTitle}>OTA Connections</h2>
+          <div className={styles.topbarStack}>
+            <h2 className={styles.topbarTitle}>OTA connections</h2>
+            <p className={styles.pageIntro}>Summary of feeds linked across rooms. Add or edit feeds under each room.</p>
+          </div>
         </header>
         <main className={styles.content}>
-          <div className={styles.card} style={{ padding: 20, marginBottom: 20 }}>
-            <div className={styles.stats}>
-              Connected channels are configured per room in <a href="/admin/rooms">Rooms & Floors</a>.
-            </div>
+          <div className={`${styles.card} ${styles.cardPad}`}>
+            <p className={styles.stats}>
+              Configure feeds in{' '}
+              <a href="/admin/rooms" className={styles.textLink}>Rooms and floors</a>
+              .
+            </p>
           </div>
           <div className={styles.card}>
             <div className={styles.tableWrap}>
@@ -40,21 +45,23 @@ export default function ChannelsPage() {
                 <thead>
                   <tr>
                     <th className={styles.th}>Channel</th>
-                    <th className={styles.th}>Connected Feeds</th>
+                    <th className={styles.th}>Feeds</th>
                     <th className={styles.th}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.keys(totals).length === 0 && (
                     <tr className={styles.tr}>
-                      <td className={styles.td} colSpan={3}>No OTA feeds configured yet.</td>
+                      <td className={styles.td} colSpan={3}>
+                        <span className={styles.cellMuted}>No OTA feeds configured yet.</span>
+                      </td>
                     </tr>
                   )}
                   {Object.entries(totals).map(([channel, count]) => (
                     <tr key={channel} className={styles.tr}>
-                      <td className={styles.td} style={{ textTransform: 'capitalize' }}>{channel}</td>
+                      <td className={`${styles.td} ${styles.capitalize}`}>{channel}</td>
                       <td className={styles.td}>{count}</td>
-                      <td className={styles.td}><span className={styles.badge + ' ' + styles.badgeCheckedIn}>Connected</span></td>
+                      <td className={styles.td}><span className={`${styles.badge} ${styles.badgeCheckedIn}`}>Connected</span></td>
                     </tr>
                   ))}
                 </tbody>

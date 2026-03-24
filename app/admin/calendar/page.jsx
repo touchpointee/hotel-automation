@@ -34,23 +34,26 @@ export default function CalendarPage() {
       <AdminSidebar activePath="/admin/calendar" />
       <div className={styles.mainContainer}>
         <header className={styles.topbar}>
-          <h2 className={styles.topbarTitle}>Calendar Sync</h2>
+          <div className={styles.topbarStack}>
+            <h2 className={styles.topbarTitle}>Calendar sync</h2>
+            <p className={styles.pageIntro}>Per-room export URLs plus a full sync across all configured iCal feeds.</p>
+          </div>
         </header>
         <main className={styles.content}>
           <div className={styles.toolbar}>
-            <div className={styles.stats}>Manage inbound OTA imports and outbound room calendars.</div>
-            <button className={styles.primaryBtn} onClick={triggerSync} disabled={syncLoading}>
-              {syncLoading ? 'Syncing...' : 'Run Full Sync'}
+            <p className={styles.pageIntro}>Run a full sync after you change OTA feed URLs under each room.</p>
+            <button type="button" className={styles.primaryBtn} onClick={triggerSync} disabled={syncLoading}>
+              {syncLoading ? 'Syncing…' : 'Run full sync'}
             </button>
           </div>
-          {message && <div className={styles.card} style={{ padding: 16, marginBottom: 16 }}>{message}</div>}
+          {message && <div className={`${styles.card} ${styles.messageBanner}`}>{message}</div>}
           <div className={styles.card}>
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
                     <th className={styles.th}>Room</th>
-                    <th className={styles.th}>Configured OTA Sources</th>
+                    <th className={styles.th}>OTA feeds</th>
                     <th className={styles.th}>Export URL</th>
                   </tr>
                 </thead>
@@ -60,7 +63,9 @@ export default function CalendarPage() {
                       <td className={styles.td}>{room.room_no}</td>
                       <td className={styles.td}>{(room.ical_sources || []).length}</td>
                       <td className={styles.td}>
-                        <code>{`${typeof window !== 'undefined' ? window.location.origin : ''}/api/calendar/room/${room._id}`}</code>
+                        <code className={styles.codeExport}>
+                          {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/calendar/room/${room._id}`}
+                        </code>
                       </td>
                     </tr>
                   ))}

@@ -10,31 +10,33 @@ export default function SettingsPage() {
     <div className={styles.layout}>
       <AdminSidebar activePath="/admin/settings" />
       <div className={styles.mainContainer}>
-        <header className={styles.topbar}>
+      <header className={styles.topbar}>
+        <div className={styles.topbarStack}>
           <h2 className={styles.topbarTitle}>Settings</h2>
-        </header>
-        <main className={styles.content}>
-          <div className={styles.card} style={{ padding: 24 }}>
-            <h3 style={{ marginTop: 0 }}>Sync Preferences</h3>
-            <div style={{ display: 'grid', gap: 14, maxWidth: 520 }}>
-              <label className={styles.label}>
-                <input
-                  type="checkbox"
-                  checked={cronEnabled}
-                  onChange={(e) => setCronEnabled(e.target.checked)}
-                  style={{ marginRight: 10 }}
-                />
-                Enable background calendar sync every 15 minutes
-              </label>
-              <div className={styles.stats}>
-                Auth/login remains unchanged and uses your existing system.
-              </div>
-              <div className={styles.stats}>
-                OTA credentials are managed by each OTA. This portal stores feed links per room and sync metadata.
-              </div>
-            </div>
+          <p className={styles.pageIntro}>Sync and integration notes for this deployment.</p>
+        </div>
+      </header>
+      <main className={styles.content}>
+        <div className={`${styles.card} ${styles.cardPadLg}`}>
+          <h3 className={styles.subtitle}>Sync preferences</h3>
+          <div className={styles.settingsGrid}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={cronEnabled}
+                onChange={(e) => setCronEnabled(e.target.checked)}
+              />
+              Enable background calendar sync every 15 minutes
+            </label>
+            <p className={styles.stats}>
+              Auth and login use your existing system.
+            </p>
+            <p className={styles.stats}>
+              OTA credentials stay with each platform. This portal stores feed URLs per room and sync metadata only.
+            </p>
           </div>
-        </main>
+        </div>
+      </main>
       </div>
     </div>
   );
