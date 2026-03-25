@@ -1,6 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+// Prevent browser pinch-zoom / zoom-in on kiosk devices.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 const STEP = { OTP: 'otp', CONFIRM: 'confirm', UPLOAD: 'upload', CARD: 'card', DONE: 'done', ERROR: 'error' };
 
 export default function KioskPage() {
@@ -44,41 +53,71 @@ export default function KioskPage() {
       if (!text) return;
 
       try {
+        // Cancel any previous utterances to avoid cutting off late retries.
         synth.cancel();
+        synth.resume?.();
+
         const utter = new SpeechSynthesisUtterance(text);
         const voice = selectVoice();
         if (voice) utter.voice = voice;
+        if (voice?.lang) utter.lang = voice.lang;
         utter.rate = 0.95;
         utter.pitch = 1.05;
         utter.volume = 1;
         utter.onend = () => setSpokenDone(true);
-        utter.onerror = () => setSpokenDone(true);
+        utter.onerror = () => {
+          // If speech fails (often due to voices not loaded yet), retry a couple times.
+          if (attempts < maxAttempts) {
+            const delay = 650 + attempts * 350;
+            timeouts.push(setTimeout(() => startSpeaking(), delay));
+          } else {
+            setSpokenDone(true);
+          }
+        };
         synth.speak(utter);
       } catch (e) {
         console.warn('speech error', e);
-        setSpokenDone(true);
+        if (attempts < maxAttempts) {
+          const delay = 650 + attempts * 350;
+          timeouts.push(setTimeout(() => startSpeaking(), delay));
+        } else {
+          setSpokenDone(true);
+        }
       }
     };
 
-    // Some browsers populate voices asynchronously.
+    // Some browsers populate voices asynchronously; retry if first attempt fails.
+    let attempts = 0;
+    const maxAttempts = 3;
+    const timeouts = [];
+
+    const startSpeaking = () => {
+      attempts += 1;
+      speakNow();
+    };
+
     const voices = synth.getVoices?.() || [];
     if (voices.length) {
-      speakNow();
-      return;
+      startSpeaking();
+      return () => {
+        timeouts.forEach((t) => clearTimeout(t));
+        synth.cancel();
+      };
     }
 
     const handleVoicesChanged = () => {
-      speakNow();
       synth.removeEventListener?.('voiceschanged', handleVoicesChanged);
+      if (!spokenDone) startSpeaking();
     };
     synth.addEventListener?.('voiceschanged', handleVoicesChanged);
 
     // Fallback: attempt after a short delay even if event doesn't fire.
-    const t = setTimeout(() => speakNow(), 500);
+    timeouts.push(setTimeout(() => startSpeaking(), 550));
 
     return () => {
-      clearTimeout(t);
+      timeouts.forEach((t) => clearTimeout(t));
       synth.removeEventListener?.('voiceschanged', handleVoicesChanged);
+      synth.cancel();
     };
   }, [step, result, spokenDone]);
 

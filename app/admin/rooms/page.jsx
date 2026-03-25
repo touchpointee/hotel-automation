@@ -6,6 +6,7 @@ import AdminSidebar from '../AdminSidebar';
 export default function RoomsPage() {
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
 
   const [isFloorModalOpen, setIsFloorModalOpen] = useState(false);
   const [editFloorId, setEditFloorId] = useState(null);
@@ -29,6 +30,7 @@ export default function RoomsPage() {
   useEffect(() => {
     fetchFloors();
     fetchRooms();
+    fetchBookings();
   }, []);
 
   async function fetchFloors() {
@@ -45,6 +47,33 @@ export default function RoomsPage() {
       const data = await res.json();
       setRooms(data.rooms || []);
     } catch (e) { console.error('Failed to fetch rooms:', e); }
+  }
+
+  async function fetchBookings() {
+    try {
+      const res = await fetch('/api/bookings');
+      const data = await res.json();
+      setBookings(data.bookings || []);
+    } catch (e) { console.error('Failed to fetch bookings:', e); }
+  }
+
+  function getRoomAvailability(roomNo) {
+    const roomBookings = bookings.filter((b) => String(b.room_no) === String(roomNo));
+    const hasCheckedIn = roomBookings.some((b) => {
+      const st = String(b.status || '');
+      return st === 'checked_in' || st === 'checked-in';
+    });
+    return hasCheckedIn ? { key: 'checked_in', label: 'Checked In' } : { key: 'free', label: 'Free' };
+  }
+
+  function getAvailabilityBadgeClass(key) {
+    switch (key) {
+      case 'checked_in':
+        return styles.badgeCheckedIn;
+      case 'free':
+      default:
+        return styles.badgeCheckedOut;
+    }
   }
 
   function openFloorModal(floor = null) {
@@ -226,29 +255,39 @@ export default function RoomsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {floorRooms.map(r => (
-                            <tr key={r._id} className={styles.tr}>
-                              <td className={`${styles.td} ${styles.w20}`}><span className={styles.roomTag}>{r.room_no}</span></td>
-                              <td className={styles.td}><span className={styles.cellMuted}>{r.directions || '—'}</span></td>
-                              <td className={styles.td}>
+                          {floorRooms.map(r => {
+                            const av = getRoomAvailability(r.room_no);
+                            return (
+                              <tr key={r._id} className={styles.tr}>
+                                <td className={`${styles.td} ${styles.w20}`}>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <span className={styles.roomTag}>{r.room_no}</span>
+                                    <span className={`${styles.badge} ${getAvailabilityBadgeClass(av.key)}`}>
+                                      {av.label}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className={styles.td}><span className={styles.cellMuted}>{r.directions || '—'}</span></td>
+                                <td className={styles.td}>
                                 <span className={`${styles.otaCount} ${(r.ical_sources || []).length > 0 ? styles.otaCountOn : styles.otaCountOff}`}>
                                   {(r.ical_sources || []).length} feed{(r.ical_sources || []).length !== 1 ? 's' : ''}
                                 </span>
-                              </td>
-                              <td className={`${styles.td} ${styles.tdRight} ${styles.w25}`}>
-                                <div className={`${styles.actions} ${styles.actionsEnd}`}>
-                                  <button type="button" onClick={() => openRoomModal(r)} className={styles.actionBtnSm}>Edit</button>
-                                  <button type="button" onClick={() => openSyncModal(r)} className={styles.actionBtnSm}>
-                                    <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden style={{ marginRight: 4, verticalAlign: 'middle' }}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    Sync
-                                  </button>
-                                  <button type="button" onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtnSm} ${styles.actionBtnDanger}`}>Delete</button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                                </td>
+                                <td className={`${styles.td} ${styles.tdRight} ${styles.w25}`}>
+                                  <div className={`${styles.actions} ${styles.actionsEnd}`}>
+                                    <button type="button" onClick={() => openRoomModal(r)} className={styles.actionBtnSm}>Edit</button>
+                                    <button type="button" onClick={() => openSyncModal(r)} className={styles.actionBtnSm}>
+                                      <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden style={{ marginRight: 4, verticalAlign: 'middle' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                      Sync
+                                    </button>
+                                    <button type="button" onClick={() => handleDeleteRoom(r._id)} className={`${styles.actionBtnSm} ${styles.actionBtnDanger}`}>Delete</button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     )}
