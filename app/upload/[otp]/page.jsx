@@ -4,25 +4,31 @@ import { useParams } from 'next/navigation';
 
 export default function MobileUploadPage() {
   const { otp } = useParams();
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [preview, setPreview] = useState(null);
   const [uploadedFilename, setUploadedFilename] = useState(null);
+  const [uploadedFilenames, setUploadedFilenames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('idle'); // idle, uploading, review, success, error
   const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected) {
-      setFile(selected);
-      // Create local preview
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(selected);
-      setStatus('idle');
-      setErrorMsg('');
-    }
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+
+    setFiles(selected);
+
+    // Create local preview for the first file only
+    const first = selected[0];
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(first);
+
+    setUploadedFilenames([]);
+    setUploadedFilename(null);
+    setStatus('idle');
+    setErrorMsg('');
   };
 
   // Check if session is active when page loads
@@ -47,12 +53,14 @@ export default function MobileUploadPage() {
   }, [otp]);
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!files || files.length === 0) return;
     setLoading(true);
     setStatus('uploading');
     
     const formData = new FormData();
-    formData.append('file', file);
+    for (const f of files) {
+      formData.append('file', f);
+    }
     formData.append('otp', otp);
 
     try {
@@ -63,7 +71,10 @@ export default function MobileUploadPage() {
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || 'Upload failed');
-      setUploadedFilename(data.filename);
+
+      const list = data.filenames || (data.filename ? [data.filename] : []);
+      setUploadedFilenames(list);
+      setUploadedFilename(list[0] || null);
       setStatus('review');
     } catch (e) {
       setStatus('error');
@@ -124,9 +135,14 @@ export default function MobileUploadPage() {
             <div style={s.previewContainer}>
               <img src={`/api/documents/${uploadedFilename}`} alt="Uploaded ID" style={s.previewImg} />
             </div>
+            {uploadedFilenames && uploadedFilenames.length > 1 && (
+              <div style={{ marginTop: 8, color: '#666', fontSize: 13 }}>
+                Uploaded {uploadedFilenames.length} documents. Only the first one is shown in preview.
+              </div>
+            )}
             <button 
               style={{ ...s.retakeBtn, marginTop: 12, width: '100%' }} 
-              onClick={() => { setStatus('idle'); setFile(null); setPreview(null); }} 
+              onClick={() => { setStatus('idle'); setFiles([]); setPreview(null); setUploadedFilenames([]); setUploadedFilename(null); }} 
               disabled={loading}
             >
               Retake Photo
@@ -147,6 +163,7 @@ export default function MobileUploadPage() {
             <input 
               type="file" 
               accept="image/*" 
+                multiple
               capture="environment" 
               ref={fileInputRef}
               onChange={handleFileChange}

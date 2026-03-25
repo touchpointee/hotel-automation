@@ -15,6 +15,9 @@ const BookingSchema = new mongoose.Schema({
   card_id:      { type: Number },
   checked_in_at: { type: Date },
   id_proof:     { type: String },
+  // Support multiple uploaded documents (admin + kiosk/mobile).
+  // Backward compatible: `id_proof` keeps the latest uploaded filename.
+  id_proofs:   { type: [String], default: [] },
   id_proof_status: { type: String, enum: ['unuploaded', 'uploaded'], default: 'unuploaded' },
   upload_session_active: { type: Boolean, default: false },
 

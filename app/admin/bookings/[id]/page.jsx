@@ -35,16 +35,24 @@ export default function BookingDetailPage() {
   const [error, setError] = useState('');
   const [previewError, setPreviewError] = useState(false);
 
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
 
+  const uploadedDocs = booking?.id_proofs?.length
+    ? booking.id_proofs
+    : booking?.id_proof
+      ? [booking.id_proof]
+      : [];
+
+  const primaryIdProof = booking?.id_proof || (uploadedDocs.length ? uploadedDocs[uploadedDocs.length - 1] : null);
+
   const isImage = useMemo(() => {
-    if (!booking?.id_proof) return false;
-    const ext = getFileExt(booking.id_proof);
+    if (!primaryIdProof) return false;
+    const ext = getFileExt(primaryIdProof);
     return ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
-  }, [booking?.id_proof]);
+  }, [primaryIdProof]);
 
   async function fetchBooking() {
     setLoading(true);
@@ -69,7 +77,7 @@ export default function BookingDetailPage() {
 
   async function handleUpload(e) {
     e.preventDefault();
-    if (!file) return;
+    if (!files || files.length === 0) return;
     if (!id) return;
 
     setUploadLoading(true);
@@ -78,7 +86,9 @@ export default function BookingDetailPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      for (const f of files) {
+        formData.append('file', f);
+      }
 
       const res = await fetch(`/api/bookings/${id}/documents`, {
         method: 'POST',
@@ -88,7 +98,7 @@ export default function BookingDetailPage() {
       if (!res.ok) throw new Error(data.error || 'Upload failed');
 
       setUploadSuccess('Document uploaded successfully.');
-      setFile(null);
+      setFiles([]);
       await fetchBooking();
     } catch (err) {
       setUploadError(err.message);
@@ -191,10 +201,11 @@ export default function BookingDetailPage() {
                   <div className={styles.detailRow}>
                     <div className={styles.detailKey}>ID PROOF</div>
                     <div className={styles.detailVal}>
-                      {booking.id_proof ? (
+                      {primaryIdProof ? (
                         <>
                           <div className={styles.idProofMeta}>
-                            {booking.id_proof_status || 'unuploaded'} • {booking.id_proof}
+                            {booking.id_proof_status || 'unuploaded'} • {uploadedDocs.length || 1} document(s)
+                            {primaryIdProof ? ` — ${primaryIdProof}` : ''}
                           </div>
 
                           {isImage ? (
@@ -202,7 +213,7 @@ export default function BookingDetailPage() {
                               <div className={styles.cellMuted}>Image preview unavailable.</div>
                             ) : (
                               <img
-                                src={`/api/documents/${booking.id_proof}`}
+                                src={`/api/documents/${primaryIdProof}`}
                                 alt="Uploaded ID proof"
                                 className={styles.idProofImage}
                                 style={{ maxWidth: 520, borderRadius: 12, border: '1px solid #ddd' }}
@@ -212,7 +223,7 @@ export default function BookingDetailPage() {
                           ) : (
                             <div className={styles.cellMuted}>
                               Preview not available for this file type.{' '}
-                              <a href={`/api/documents/${booking.id_proof}?download=true`} download>
+                                <a href={`/api/documents/${primaryIdProof}?download=true`} download>
                                 Download
                               </a>
                             </div>
@@ -226,13 +237,34 @@ export default function BookingDetailPage() {
 
                           <div style={{ marginTop: 12 }}>
                             <a
-                              href={`/api/documents/${booking.id_proof}?download=true`}
+                              href={`/api/documents/${primaryIdProof}?download=true`}
                               download
                               className={styles.primaryBtn}
                             >
                               Download document
                             </a>
                           </div>
+
+                          {uploadedDocs.length > 1 && (
+                            <div style={{ marginTop: 12 }}>
+                              <div className={styles.cellMuted} style={{ marginBottom: 8 }}>
+                                Other documents:
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {uploadedDocs.map((name) => (
+                                  <a
+                                    key={name}
+                                    href={`/api/documents/${name}?download=true`}
+                                    download
+                                    className={styles.textLink}
+                                    style={{ maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                  >
+                                    {name}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <span className={styles.idPending}>No document uploaded yet</span>
@@ -248,9 +280,10 @@ export default function BookingDetailPage() {
                     <label className={styles.label}>Upload / replace document for this booking</label>
                     <input
                       type="file"
-                      accept="image/*,application/pdf"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
-                      required
+                    accept="image/*,application/pdf"
+                    multiple
+                    onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                    required
                     />
                   </div>
 

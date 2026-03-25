@@ -12,8 +12,75 @@ export default function KioskPage() {
   const [loading, setLoading] = useState(false);
   const [cardPlaced, setCardPlaced] = useState(false);
   const [host, setHost] = useState('');
+  const [spokenDone, setSpokenDone] = useState(false);
 
   useEffect(() => { setHost(window.location.origin); }, []);
+
+  useEffect(() => {
+    // Speak a final thank-you + directions on the DONE screen.
+    if (step !== STEP.DONE || !result || spokenDone) return;
+    if (typeof window === 'undefined') return;
+    if (!('speechSynthesis' in window)) return;
+
+    const synth = window.speechSynthesis;
+
+    const selectVoice = () => {
+      const voices = synth.getVoices?.() || [];
+      if (!voices.length) return null;
+
+      // Try to pick a "female-sounding" voice by common name patterns.
+      const preferred = voices.find((v) => /female|woman|zira|susan|samantha|victoria|karen|moira|tessa|sonia|natasha/i.test(v.name));
+      if (preferred) return preferred;
+
+      // Otherwise pick an English voice if available, else default.
+      return voices.find((v) => /^en[-_]/i.test(v.lang) || /english/i.test(v.lang)) || voices[0] || null;
+    };
+
+    const speakNow = () => {
+      const roomNo = result.room_no ? `Room ${result.room_no}.` : '';
+      const directions = result.directions ? `Directions: ${result.directions}` : '';
+      const text = `Thank you. Your check in is complete. ${roomNo} ${directions}`.replace(/\s+/g, ' ').trim();
+
+      if (!text) return;
+
+      try {
+        synth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        const voice = selectVoice();
+        if (voice) utter.voice = voice;
+        utter.rate = 0.95;
+        utter.pitch = 1.05;
+        utter.volume = 1;
+        utter.onend = () => setSpokenDone(true);
+        utter.onerror = () => setSpokenDone(true);
+        synth.speak(utter);
+      } catch (e) {
+        console.warn('speech error', e);
+        setSpokenDone(true);
+      }
+    };
+
+    // Some browsers populate voices asynchronously.
+    const voices = synth.getVoices?.() || [];
+    if (voices.length) {
+      speakNow();
+      return;
+    }
+
+    const handleVoicesChanged = () => {
+      speakNow();
+      synth.removeEventListener?.('voiceschanged', handleVoicesChanged);
+    };
+    synth.addEventListener?.('voiceschanged', handleVoicesChanged);
+
+    // Fallback: attempt after a short delay even if event doesn't fire.
+    const t = setTimeout(() => speakNow(), 500);
+
+    return () => {
+      clearTimeout(t);
+      synth.removeEventListener?.('voiceschanged', handleVoicesChanged);
+    };
+  }, [step, result, spokenDone]);
 
   useEffect(() => {
     let interval;
@@ -92,6 +159,10 @@ export default function KioskPage() {
   function reset() {
     setStep(STEP.OTP); setOtp(''); setBooking(null);
     setResult(null); setError(''); setCardPlaced(false);
+    setSpokenDone(false);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch {}
+    }
   }
 
   return (
