@@ -181,14 +181,15 @@ export default function KioskPage() {
         )}
 
         {step === STEP.CARD && (
-          <div style={s.card}>
+          <div style={{ ...s.card, maxWidth: 660 }}>
             {!cardPlaced ? (
               <div
                 style={{
                   display: 'flex',
-                  flexDirection: 'column',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 20,
+                  justifyContent: 'center',
+                  gap: 28,
                   padding: '20px 0',
                   width: '100%',
                   animation: 'popIn 0.3s ease-out',
@@ -196,14 +197,41 @@ export default function KioskPage() {
               >
                 <div
                   style={{
-                    width: 210,
-                    height: 220,
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    width: '100%',
+                    textAlign: 'center',
+                    gap: 14,
+                  }}
+                >
+                  <h2 style={{ ...s.heading, color: '#1a6b3a' }}>Place Card First</h2>
+                  <p style={{ ...s.sub, fontSize: 16, lineHeight: 1.5, color: '#444', marginTop: 0 }}>
+                    Please grab a blank room key and place it flat on the encoder device next to this screen.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 12, marginTop: 16 }}>
+                    <button style={{ ...s.btn, padding: '16px', fontSize: 18 }} onClick={() => setCardPlaced(true)}>
+                      Okay, It's Placed ✓
+                    </button>
+                    <button style={{ ...s.btn, ...s.btnGray, padding: '16px', fontSize: 16 }} onClick={reset}>
+                      Restart Check-in
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    width: 250,
+                    height: 320,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 12,
                     overflow: 'hidden',
                     background: '#f5f7fa',
+                    flexShrink: 0,
                   }}
                 >
                   <video
@@ -215,20 +243,6 @@ export default function KioskPage() {
                     preload="auto"
                     style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
                   />
-                </div>
-
-                <h2 style={{ ...s.heading, color: '#1a6b3a' }}>Place Card First</h2>
-                <p style={{ ...s.sub, fontSize: 16, lineHeight: 1.5, color: '#444' }}>
-                  Please grab a blank room key and place it flat on the encoder device next to this screen.
-                </p>
-
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 12, marginTop: 16 }}>
-                  <button style={{ ...s.btn, padding: '16px', fontSize: 18 }} onClick={() => setCardPlaced(true)}>
-                    Okay, It's Placed ✓
-                  </button>
-                  <button style={{ ...s.btn, ...s.btnGray, padding: '16px', fontSize: 16 }} onClick={reset}>
-                    Restart Check-in
-                  </button>
                 </div>
               </div>
             ) : (
