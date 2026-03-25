@@ -39,6 +39,7 @@ export default function BookingDetailPage() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const uploadedDocs = booking?.id_proofs?.length
     ? booking.id_proofs
@@ -107,6 +108,26 @@ export default function BookingDetailPage() {
     }
   }
 
+  async function handleCheckout() {
+    if (!booking?._id) return;
+    if (!confirm('Checkout this booking?')) return;
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch(`/api/bookings/${booking._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'checked_out' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Checkout failed');
+      await fetchBooking();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
+
   return (
     <div className={styles.layout}>
       <AdminSidebar activePath="/admin" />
@@ -148,6 +169,17 @@ export default function BookingDetailPage() {
                     <div className={styles.badge} style={{ display: 'inline-block', marginBottom: 8 }}>
                       Status: {booking.status?.replace('_', ' ') || '—'}
                     </div>
+                    {(booking.status === 'checked_in' || booking.status === 'checked-in') && (
+                      <button
+                        type="button"
+                        className={styles.secondaryBtn}
+                        onClick={handleCheckout}
+                        disabled={checkoutLoading}
+                        style={{ display: 'inline-flex', marginBottom: 10 }}
+                      >
+                        {checkoutLoading ? 'Checking out…' : 'Checkout'}
+                      </button>
+                    )}
                     {booking.otp && (
                       <div className={styles.cellMuted} style={{ marginTop: 6 }}>
                         Kiosk OTP: <span className={styles.otpCode}>{booking.otp}</span>

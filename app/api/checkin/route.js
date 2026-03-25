@@ -3,6 +3,49 @@ import Booking from '@/models/Booking';
 import Room from '@/models/Room';
 import Floor from '@/models/Floor';
 import { issueKeyCard } from '@/lib/yale';
+import CheckinLock from '@/models/CheckinLock';
+
+async function acquireGlobalCheckinLock({ otp, holdMs = 180000 }) {
+  // Atomically acquire a global lock if it's not currently held.
+  // holdMs is a safety timeout to avoid deadlocks.
+  await CheckinLock.updateOne(
+    { _id: 'global' },
+    { $setOnInsert: { lockedUntil: null, lockedByOtp: null } },
+    { upsert: true }
+  );
+
+  const now = new Date();
+  const lockedUntil = new Date(now.getTime() + holdMs);
+
+  const res = await CheckinLock.findOneAndUpdate(
+    {
+      _id: 'global',
+      $or: [
+        { lockedUntil: null },
+        { lockedUntil: { $lt: now } },
+        { lockedUntil: { $exists: false } },
+      ],
+    },
+    {
+      $set: {
+        lockedUntil,
+        lockedByOtp: otp || null,
+      },
+    },
+    { new: true, upsert: false }
+  );
+
+  // If we acquired it, lockedUntil will be in the future.
+  return Boolean(res && res.lockedUntil && res.lockedUntil.getTime() === lockedUntil.getTime());
+}
+
+async function releaseGlobalCheckinLock() {
+  await CheckinLock.updateOne(
+    { _id: 'global' },
+    { $set: { lockedUntil: null, lockedByOtp: null } },
+    { upsert: true }
+  );
+}
 
 // POST - guest submits OTP, lookup booking
 export async function POST(request) {
@@ -40,6 +83,28 @@ export async function POST(request) {
   // action=confirm → issue card via Yale API
   if (action === 'confirm') {
     try {
+      // Ensure only one check-in can be processed at a time.
+      const locked = await acquireGlobalCheckinLock({ otp });
+      if (!locked) {
+        return Response.json(
+          { error: 'Another check-in is in progress. Please wait a moment and try again.' },
+          { status: 409 }
+        );
+      }
+
+      // Room-level guard: only one active checked-in booking per room.
+      const existingCheckedIn = await Booking.findOne({
+        room_no: booking.room_no,
+        status: { $in: ['checked_in', 'checked-in'] },
+        _id: { $ne: booking._id },
+      });
+      if (existingCheckedIn) {
+        return Response.json(
+          { error: 'This room is already checked in.' },
+          { status: 409 }
+        );
+      }
+
       const cardDetail = await issueKeyCard({
         room_no: booking.room_no,
         begin_time: booking.check_in,
@@ -71,6 +136,9 @@ export async function POST(request) {
       });
     } catch (err) {
       return Response.json({ error: err.message }, { status: 500 });
+    } finally {
+      // Release on both success and failure of this action.
+      await releaseGlobalCheckinLock();
     }
   }
 

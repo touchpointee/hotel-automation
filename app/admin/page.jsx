@@ -163,6 +163,22 @@ export default function AdminPage() {
     }
   }
 
+  async function handleCheckout(id) {
+    if (!confirm('Checkout this booking?')) return;
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'checked_out' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Checkout failed');
+      fetchBookings();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true); setError(''); setSuccess(null);
@@ -389,6 +405,15 @@ export default function AdminPage() {
                               </button>
                             )}
                             <button type="button" onClick={(e) => { e.stopPropagation(); openEditModal(b); }} className={styles.actionBtn}>Edit</button>
+                            {(b.status === 'checked_in' || b.status === 'checked-in') && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleCheckout(b._id); }}
+                                className={styles.actionBtn}
+                              >
+                                Checkout
+                              </button>
+                            )}
                             <button type="button" onClick={(e) => { e.stopPropagation(); handleDelete(b._id); }} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
                           </div>
                         </td>

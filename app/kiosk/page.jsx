@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Prevent browser pinch-zoom / zoom-in on kiosk devices.
 export const viewport = {
@@ -22,12 +22,13 @@ export default function KioskPage() {
   const [cardPlaced, setCardPlaced] = useState(false);
   const [host, setHost] = useState('');
   const [spokenDone, setSpokenDone] = useState(false);
+  const didInitiateSpeechRef = useRef(false);
 
   useEffect(() => { setHost(window.location.origin); }, []);
 
   useEffect(() => {
     // Speak a final thank-you + directions on the DONE screen.
-    if (step !== STEP.DONE || !result || spokenDone) return;
+    if (step !== STEP.DONE || !result || spokenDone || didInitiateSpeechRef.current) return;
     if (typeof window === 'undefined') return;
     if (!('speechSynthesis' in window)) return;
 
@@ -191,6 +192,36 @@ export default function KioskPage() {
       if (!res.ok) throw new Error(data.error);
       setResult(data);
       setStep(STEP.DONE);
+
+      // Speak immediately after confirm (closer to user interaction).
+      // This is more reliable than waiting for the DONE screen render.
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        didInitiateSpeechRef.current = true;
+        setSpokenDone(false);
+        try {
+          const synth = window.speechSynthesis;
+          const roomNo = data?.room_no ? `Room ${data.room_no}.` : '';
+          const directions = data?.directions ? `Directions: ${data.directions}` : '';
+          const text = `Thank you. Your check in is complete. ${roomNo} ${directions}`.replace(/\s+/g, ' ').trim();
+          if (text) {
+            synth.cancel();
+            synth.resume?.();
+            const utter = new SpeechSynthesisUtterance(text);
+            const voices = synth.getVoices?.() || [];
+            const preferred = voices.find((v) => /female|woman|zira|susan|samantha|victoria|karen|moira|tessa|sonia|natasha/i.test(v.name));
+            utter.voice = preferred || voices.find((v) => /^en[-_]/i.test(v.lang) || /english/i.test(v.lang)) || voices[0] || null;
+            if (utter.voice?.lang) utter.lang = utter.voice.lang;
+            utter.rate = 0.95;
+            utter.pitch = 1.05;
+            utter.volume = 1;
+            utter.onstart = () => setSpokenDone(true);
+            utter.onerror = () => setSpokenDone(true);
+            synth.speak(utter);
+          }
+        } catch (e) {
+          setSpokenDone(true);
+        }
+      }
     } catch (e) { setError(e.message); setStep(STEP.ERROR); }
     finally { setLoading(false); }
   }
@@ -199,6 +230,7 @@ export default function KioskPage() {
     setStep(STEP.OTP); setOtp(''); setBooking(null);
     setResult(null); setError(''); setCardPlaced(false);
     setSpokenDone(false);
+    didInitiateSpeechRef.current = false;
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch {}
     }
@@ -403,7 +435,14 @@ export default function KioskPage() {
             <div style={s.icon}>❌</div>
             <h2 style={{ ...s.heading, color: '#c0392b' }}>Check-in Failed</h2>
             <div style={s.errorBox}>{error}</div>
-            {error && error.includes('23') ? (
+            {error && error.toLowerCase().includes('another check-in is in progress') ? (
+              <>
+                <p style={s.sub}>Another check-in is in progress. Please wait a moment and try again.</p>
+                <button style={s.btn} onClick={() => { setError(''); setStep(STEP.CARD); setCardPlaced(false); }}>
+                  ← Place Card Again
+                </button>
+              </>
+            ) : error && error.includes('23') ? (
               <>
                 <p style={s.sub}>No card was detected on the encoder. Please make sure the key card is placed perfectly flat.</p>
                 <button style={s.btn} onClick={() => { setError(''); setStep(STEP.CARD); setCardPlaced(false); }}>← Place Card Again</button>
