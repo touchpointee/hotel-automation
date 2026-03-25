@@ -40,6 +40,14 @@ const BookingSchema = new mongoose.Schema({
   raw_payload:      { type: mongoose.Schema.Types.Mixed },
 }, { timestamps: true });
 
-BookingSchema.index({ source: 1, external_booking_id: 1 }, { unique: true, sparse: true });
+// Only enforce uniqueness when external_booking_id is actually present.
+// This prevents "direct" / manual bookings (external_booking_id=null) from colliding.
+BookingSchema.index(
+  { source: 1, external_booking_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { external_booking_id: { $exists: true, $type: 'string', $ne: '' } },
+  }
+);
 
 export default mongoose.models.Booking || mongoose.model('Booking', BookingSchema);

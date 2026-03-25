@@ -4,6 +4,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { connectDB } from '@/lib/db';
 import Booking from '@/models/Booking';
+import { putDocumentObject, getContentTypeForFilename } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,23 +34,23 @@ export async function POST(req) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to documents/ folder
-    const uploadDir = path.join(process.cwd(), 'documents');
-    
-    // Create documents folder if missing
-    if (!existsSync(uploadDir)) {
-      await fs.mkdir(uploadDir, { recursive: true });
-    }
-
     // Construct filename securely
     const originalName = file.name || '';
     const rawExt = originalName.split('.').pop() || 'jpg';
     const ext = String(rawExt).toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
     const filename = `id_proof_${booking._id}_${Date.now()}.${ext}`;
-    const filepath = path.join(uploadDir, filename);
+    const contentType = getContentTypeForFilename(filename);
 
-    // Write file
-    await fs.writeFile(filepath, buffer);
+    // Prefer Garage/S3 if configured; otherwise fall back to local filesystem.
+    const s3Result = await putDocumentObject({ key: filename, body: buffer, contentType });
+    if (!s3Result.stored) {
+      const uploadDir = path.join(process.cwd(), 'documents');
+      if (!existsSync(uploadDir)) {
+        await fs.mkdir(uploadDir, { recursive: true });
+      }
+      const filepath = path.join(uploadDir, filename);
+      await fs.writeFile(filepath, buffer);
+    }
 
     // Update booking in DB
     booking.id_proof = filename;

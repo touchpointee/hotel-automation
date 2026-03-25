@@ -9,6 +9,7 @@
     "seed:admin": "node scripts/seed-admin.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1016.0",
     "bcryptjs": "^3.0.3",
     "ical.js": "^2.2.1",
     "jose": "^6.2.2",

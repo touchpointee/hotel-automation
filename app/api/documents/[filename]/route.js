@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createReadStream, statSync, existsSync } from 'fs';
 import path from 'path';
+import { getDocumentObjectStream, getContentTypeForFilename } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,23 +15,31 @@ export async function GET(req, { params }) {
       return new NextResponse('Invalid filename', { status: 400 });
     }
 
-    const filepath = path.join(process.cwd(), 'documents', filename);
+    const isDownload = req.nextUrl.searchParams.get('download') === 'true';
 
+    // Prefer Garage/S3 if configured.
+    const s3Obj = await getDocumentObjectStream({ key: filename });
+    if (s3Obj.found) {
+      return new NextResponse(s3Obj.body, {
+        status: 200,
+        headers: {
+          'Content-Type': s3Obj.contentType || getContentTypeForFilename(filename),
+          ...(typeof s3Obj.contentLength === 'number' ? { 'Content-Length': String(s3Obj.contentLength) } : {}),
+          'Content-Disposition': `${isDownload ? 'attachment' : 'inline'}; filename="${filename}"`,
+          'Cache-Control': 'private, no-store',
+        },
+      });
+    }
+
+    // Fallback to local filesystem.
+    const filepath = path.join(process.cwd(), 'documents', filename);
     if (!existsSync(filepath)) {
       return new NextResponse('Document not found', { status: 404 });
     }
 
     const stats = statSync(filepath);
     const stream = createReadStream(filepath);
-
-    const isDownload = req.nextUrl.searchParams.get('download') === 'true';
-
-    // Determine content type
-    let contentType = 'application/octet-stream';
-    if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) contentType = 'image/jpeg';
-    else if (filename.endsWith('.png')) contentType = 'image/png';
-    else if (filename.endsWith('.webp')) contentType = 'image/webp';
-    else if (filename.endsWith('.pdf')) contentType = 'application/pdf';
+    const contentType = getContentTypeForFilename(filename);
 
     // Return the file stream
     return new NextResponse(stream, {
