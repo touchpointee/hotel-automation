@@ -183,10 +183,45 @@ export default function KioskPage() {
         {step === STEP.CARD && (
           <div style={s.card}>
             {!cardPlaced ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '20px 0', width: '100%', animation: 'popIn 0.3s ease-out' }}>
-                <div style={{ fontSize: 72, animation: 'pulse 1.5s infinite' }}>💳</div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 20,
+                  padding: '20px 0',
+                  width: '100%',
+                  animation: 'popIn 0.3s ease-out',
+                }}
+              >
+                <div
+                  style={{
+                    width: 210,
+                    height: 220,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    background: '#f5f7fa',
+                  }}
+                >
+                  <video
+                    src="/card.mp4"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  />
+                </div>
+
                 <h2 style={{ ...s.heading, color: '#1a6b3a' }}>Place Card First</h2>
-                <p style={{ ...s.sub, fontSize: 16, lineHeight: 1.5, color: '#444' }}>Please grab a blank room key and place it flat on the encoder device next to this screen.</p>
+                <p style={{ ...s.sub, fontSize: 16, lineHeight: 1.5, color: '#444' }}>
+                  Please grab a blank room key and place it flat on the encoder device next to this screen.
+                </p>
+
                 <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 12, marginTop: 16 }}>
                   <button style={{ ...s.btn, padding: '16px', fontSize: 18 }} onClick={() => setCardPlaced(true)}>
                     Okay, It's Placed ✓

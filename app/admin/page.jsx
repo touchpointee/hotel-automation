@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './admin.module.css';
 import AdminSidebar from './AdminSidebar';
 
@@ -12,6 +13,7 @@ function formatStayDisplay(value) {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [availableFloors, setAvailableFloors] = useState([]);
@@ -321,7 +323,20 @@ export default function AdminPage() {
                     {filteredBookings.map(b => {
                       const isOverdue = b.status === 'checked_in' && new Date() > new Date(b.check_out);
                       return (
-                      <tr key={b._id} className={styles.tr}>
+                      <tr
+                        key={b._id}
+                        className={`${styles.tr} ${styles.rowClickable}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => router.push(`/admin/bookings/${b._id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            router.push(`/admin/bookings/${b._id}`);
+                          }
+                        }}
+                        aria-label={`Open booking details for ${b.guest_name || 'guest'}`}
+                      >
                         <td className={styles.td}>
                           <div className={styles.guestName}>{b.guest_name}</div>
                           <div className={styles.cellMuted}>{b.guest_phone}</div>
@@ -351,11 +366,7 @@ export default function AdminPage() {
                           <span className={styles.otpCode}>{b.otp}</span>
                         </td>
                         <td className={styles.td}>
-                          {b.id_proof_status === 'uploaded' && b.id_proof ? (
-                            <button onClick={() => openEditModal(b)} className={styles.actionBtn}>View Details</button>
-                          ) : (
-                            <span className={styles.idPending}>Pending</span>
-                          )}
+                          <span className={styles.cellMuted}>{b.id_proof_status || 'unuploaded'}</span>
                         </td>
                         <td className={styles.td}>
                           <span className={`${styles.badge} ${getStatusClass(b.status)}`}>
@@ -368,7 +379,7 @@ export default function AdminPage() {
                             {!b.otp && b.source !== 'direct' && b.source !== 'offline' && (
                               <button
                                 type="button"
-                                onClick={() => { setConfirmModal(b); setConfirmRoomFloor(''); setConfirmRoom(''); }}
+                                onClick={(e) => { e.stopPropagation(); setConfirmModal(b); setConfirmRoomFloor(''); setConfirmRoom(''); }}
                                 className={styles.assignRoomBtn}
                               >
                                 <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
@@ -377,8 +388,8 @@ export default function AdminPage() {
                                 Assign room
                               </button>
                             )}
-                            <button type="button" onClick={() => openEditModal(b)} className={styles.actionBtn}>Edit</button>
-                            <button type="button" onClick={() => handleDelete(b._id)} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); openEditModal(b); }} className={styles.actionBtn}>Edit</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); handleDelete(b._id); }} className={`${styles.actionBtn} ${styles.actionBtnDanger}`}>Delete</button>
                           </div>
                         </td>
                       </tr>

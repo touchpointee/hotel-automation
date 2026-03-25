@@ -284,7 +284,7 @@
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(30, 79, 173, 0.26);
   transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
@@ -826,6 +826,74 @@
   width: 100%;
 }
 
+.detailTableWrap {
+  overflow-x: auto;
+  width: 100%;
+  padding: 0 34px; /* card-edge padding so labels aren't flush */
+  box-sizing: border-box;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.bookingDetailInner {
+  padding: 22px 24px 26px;
+}
+
+.bookingDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detailRows {
+  margin-top: 18px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+}
+
+.detailKey {
+  width: 220px;
+  min-width: 220px;
+  padding: 16px 24px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  font-weight: 600;
+  background-color: var(--surface-alt);
+  box-sizing: border-box;
+}
+
+.detailVal {
+  flex: 1;
+  padding: 16px 24px;
+  font-size: 14px;
+  color: #2f3f55;
+  box-sizing: border-box;
+}
+
+.detailRow:last-child .detailKey,
+.detailRow:last-child .detailVal {
+  border-bottom: none;
+}
+
+.idProofMeta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -846,6 +914,37 @@
   z-index: 1;
 }
 
+.detailTh {
+  padding: 16px 24px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  font-weight: 600;
+  /* Border is controlled by the table row to avoid double lines */
+  border-bottom: none;
+  background-color: var(--surface-alt);
+  position: static;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 220px;
+  min-width: 220px;
+}
+
+.detailTr {
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--line);
+}
+
+.detailTr:last-child {
+  border-bottom: none;
+}
+
+.detailTr:hover {
+  background-color: #f9fbff;
+}
+
 .tr {
   transition: background-color 0.2s ease;
   border-bottom: 1px solid #f2f5fa;
@@ -857,6 +956,15 @@
 
 .tr:hover {
   background-color: #f9fbff;
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+.rowClickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
 }
 
 .td {
